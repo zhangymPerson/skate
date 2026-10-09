@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/agnivade/levenshtein"
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/fang"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dgraph-io/badger/v4"
@@ -29,6 +30,8 @@ var (
 	valuesIterate    bool
 	showBinary       bool
 	delimiterIterate string
+	copyToClipboard  bool
+	storePath        string
 
 	warningStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("204")).Bold(true)
 
@@ -151,6 +154,9 @@ func get(_ *cobra.Command, args []string) error {
 		return err
 	}
 	printFromKV("%s", v)
+	if copyToClipboard {
+		return clipboard.WriteAll(string(v))
+	}
 	return nil
 }
 
@@ -212,12 +218,19 @@ func formatDbs(dbs []string) []string {
 //
 //nolint:wrapcheck
 func getFilePath(args ...string) (string, error) {
-	scope := gap.NewScope(gap.User, "charm")
-	dd, pathErr := scope.DataPath("")
-	if pathErr != nil {
-		return "", pathErr
+	dir := storePath
+	if dir == "" {
+		dir = os.Getenv("SKATE_STORE")
 	}
-	dir := filepath.Join(dd, "kv")
+	if dir == "" {
+		scope := gap.NewScope(gap.User, "charm")
+		dd, pathErr := scope.DataPath("")
+		if pathErr != nil {
+			return "", pathErr
+		}
+		dir = filepath.Join(dd, "kv")
+	}
+	dir = filepath.Clean(dir)
 	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return "", err
 	}
@@ -425,12 +438,15 @@ func openKV(name string) (*badger.DB, error) {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVar(&storePath, "store", "", "path to the Skate store (defaults to SKATE_STORE or the user data directory)")
+
 	listCmd.Flags().BoolVarP(&reverseIterate, "reverse", "r", false, "list in reverse lexicographic order")
 	listCmd.Flags().BoolVarP(&keysIterate, "keys-only", "k", false, "only print keys and don't fetch values from the db")
 	listCmd.Flags().BoolVarP(&valuesIterate, "values-only", "v", false, "only print values")
 	listCmd.Flags().StringVarP(&delimiterIterate, "delimiter", "d", "\t", "delimiter to separate keys and values")
 	listCmd.Flags().BoolVarP(&showBinary, "show-binary", "b", false, "print binary values")
 	getCmd.Flags().BoolVarP(&showBinary, "show-binary", "b", false, "print binary values")
+	getCmd.Flags().BoolVarP(&copyToClipboard, "copy", "c", false, "copy value to clipboard")
 
 	rootCmd.AddCommand(
 		getCmd,

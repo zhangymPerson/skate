@@ -1,9 +1,10 @@
 module github.com/charmbracelet/skate
 
-go 1.24.2
+go 1.26.7
 
 require (
 	github.com/agnivade/levenshtein v1.2.1
+	github.com/atotto/clipboard v0.1.4
 	github.com/charmbracelet/fang v0.4.3
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/dgraph-io/badger/v4 v4.9.6
@@ -48,8 +49,8 @@ require (
 	go.opentelemetry.io/otel v1.41.0 // indirect
 	go.opentelemetry.io/otel/metric v1.41.0 // indirect
 	go.opentelemetry.io/otel/trace v1.41.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
 )
